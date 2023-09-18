@@ -163,10 +163,10 @@ def gen_interp_video(G, mp4: str, ws, w_frames=60*4, kind='cubic', grid_dims=(1,
                         with torch.no_grad():
                             while head < samples.shape[1]:
                                 torch.manual_seed(0)
-                                sample_result = G.sample_mixed(samples[:, head:head+max_batch], transformed_ray_directions_expanded[:, :samples.shape[1]-head], w.unsqueeze(0), truncation_psi=psi, noise_mode='const')['sigma']
-                                sigmas[:, head:head+max_batch] = sample_result['sigma']
-                                color_batch = G.torgb(sample_result['rgb'].transpose(1,2)[...,None], ws[0,0,0,:1])
-                                colors[:, head:head+max_batch] = np.transpose(color_batch[...
+                                sigma = G.sample_mixed(samples[:, head:head+max_batch], transformed_ray_directions_expanded[:, :samples.shape[1]-head], w.unsqueeze(0), truncation_psi=psi, noise_mode='const')['sigma']
+                                sigmas[:, head:head+max_batch] = sigma
+                                head += max_batch
+                                pbar.update(max_batch)
 
                     sigmas = sigmas.reshape((voxel_resolution, voxel_resolution, voxel_resolution)).cpu().numpy()
                     sigmas = np.flip(sigmas, 0)

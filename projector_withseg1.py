@@ -288,7 +288,6 @@ def run_projection(
     num_steps_pti: int,
     fps: int,
     shapes: bool,
-    colors: bool,
 ):
     """Project given image to the latent space of pretrained network pickle.
 
@@ -429,42 +428,6 @@ def run_projection(
         pickle.dump(network_data, f)
 
     if colors:
-
-                    samples, voxel_origin, voxel_size = create_samples(N=voxel_resolution, voxel_origin=[0, 0, 0], cube_length=G.rendering_kwargs['box_warp'])
-                    samples = samples.to(device)
-                    sigmas = torch.zeros((samples.shape[0], samples.shape[1], 1), device=device)
-                    transformed_ray_directions_expanded = torch.zeros((samples.shape[0], max_batch, 3), device=device)
-                    transformed_ray_directions_expanded[..., -1] = -1
-
-                    head = 0
-                    with tqdm(total = samples.shape[1]) as pbar:
-                        with torch.no_grad():
-                            while head < samples.shape[1]:
-                                torch.manual_seed(0)
-                                sample_result = G.sample_mixed(samples[:, head:head+max_batch], transformed_ray_directions_expanded[:, :samples.shape[1]-head], w.unsqueeze(0), truncation_psi=psi, noise_mode='const')['sigma']
-                                sigmas[:, head:head+max_batch] = sample_result['sigma']
-                                color_batch = G.torgb(sample_result['rgb'].transpose(1,2)[...,None], ws[0,0,0,:1])
-                                colors[:, head:head+max_batch] = np.transpose(color_batch[...
-
-                    sigmas = sigmas.reshape((voxel_resolution, voxel_resolution, voxel_resolution)).cpu().numpy()
-                    sigmas = np.flip(sigmas, 0)
-                    
-                    pad = int(30 * voxel_resolution / 256)
-                    pad_top = int(38 * voxel_resolution / 256)
-                    sigmas[:pad] = 0
-                    sigmas[-pad:] = 0
-                    sigmas[:, :pad] = 0
-                    sigmas[:, -pad_top:] = 0
-                    sigmas[:, :, :pad] = 0
-                    sigmas[:, :, -pad:] = 0
-
-                    output_ply = False
-                    if output_ply:
-                        from shape_utils import convert_sdf_samples_to_ply
-                        convert_sdf_samples_to_ply(np.transpose(sigmas, (2, 1, 0)), [0, 0, 0], 1, os.path.join(outdir, 'geometry_colors.ply'), level=10)
-                    else: # output mrc
-                        with mrcfile.new_mmap(os.path.join(outdir, 'geometry.mrc'), overwrite=True, shape=sigmas.shape, mrc_mode=2) as mrc:
-                            mrc.data[:] = sigmas
 
 
 #----------------------------------------------------------------------------
